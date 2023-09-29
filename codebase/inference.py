@@ -27,13 +27,16 @@ def main():
     # load models
     sepformer = separator.from_hparams(source="speechbrain/sepformer-wsj02mix",
                                        savedir='pretrained_models/sepformer-wsj02mix')
-    # ConvTasNet = BaseModel.from_pretrained("JorisCos/ConvTasNet_Libri2Mix_sepclean_8k")
+    ConvTasNet = BaseModel.from_pretrained("JorisCos/ConvTasNet_Libri2Mix_sepclean_8k")
     DPRNNTasNet = BaseModel.from_pretrained("mpariente/DPRNNTasNet-ks2_WHAM_sepclean")
     Sudoimprovednet = BaseModel.from_pretrained('pretrained_models/best_model.pth')
-    ConvTasNet = BaseModel.from_pretrained('pretrained_models/convtasnet/best_model.pth')
+    #ConvTasNet = BaseModel.from_pretrained('pretrained_models/convtasnet/best_model.pth')
 
 
     # separate
+    filename = (val_set.df.values[index][2])
+    filename=filename.split(".")[0]
+    filename = filename.split("/")[-1]
     est_sources_sep = sepformer.separate_file(val_set.df.values[index][2])
     torchaudio.save("sepformer1.wav", est_sources_sep[:, :, 0].detach().cpu(), 8000)
     torchaudio.save("sepformer2.wav", est_sources_sep[:, :, 1].detach().cpu(), 8000)
@@ -42,24 +45,24 @@ def main():
     Sudoimprovednet.separate(val_set.df.values[index][2], output_dir="Sudo", resample=True, force_overwrite=True)
 
     # load predictions
-    # estse1 = sf.read("sepformer1.wav")[0]
-    # estse2 = sf.read("sepformer2.wav")[0]
+    estse1 = sf.read("sepformer1.wav")[0]
+    estse2 = sf.read("sepformer2.wav")[0]
 
-    estc1 = sf.read("ConvTasNet/" + "est1")[0]
-    # estc2 = sf.read("ConvTasNet/" + name2)[0]
+    estc1 = sf.read("ConvTasNet/" + filename+"_est1.wav")[0]
+    estc2 = sf.read("ConvTasNet/" + filename+"_est2.wav")[0]
 
-    # estd1 = sf.read("DPRNNTasNet/" + name)[0]
-    estd2 = sf.read("DPRNNTasNet/" + "est2")[0]
+    estd1 = sf.read("DPRNNTasNet/" + filename+"_est1.wav")[0]
+    estd2 = sf.read("DPRNNTasNet/" + filename+"_est2.wav")[0]
 
-    ests1 = sf.read("Sudo/" + "est1")[0]
-    ests2 = sf.read("Sudo/" + "est2")[0]
+    ests1 = sf.read("Sudo/" + filename+"_est1.wav")[0]
+    ests2 = sf.read("Sudo/" + filename+"_est2.wav")[0]
 
     fig, ax = plt.subplots(1, 2, figsize=(15, 5))
     show_magspec(ests1, sr=8000, ax=ax[0])
     show_magspec(ests2, sr=8000, ax=ax[1])
     plt.show()
 
-    anechoic_sampled_mixture, _ = torchaudio.load("Sudo/" + "est1")
+    anechoic_sampled_mixture, _ = torchaudio.load("Sudo/" + filename+"_est1.wav")
     waveform = anechoic_sampled_mixture.detach().numpy()[0]
     plt.plot(waveform)
     plt.show()
